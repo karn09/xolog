@@ -20,11 +20,6 @@ func runPrompt() {
 
 	for scanner.Scan() {
 		run(scanner.Text())
-
-		if hadError {
-			os.Exit(65)
-		}
-
 		fmt.Print("> ")
 	}
 
@@ -44,10 +39,6 @@ func runFile(path string) {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		run(scanner.Text())
-
-		if hadError {
-			os.Exit(65)
-		}
 	}
 }
 
