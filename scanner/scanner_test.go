@@ -1,6 +1,8 @@
 package scanner
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 	"xolog/token"
 )
@@ -52,4 +54,16 @@ func TestAddToken(t *testing.T) {
 	if tokens[1].Type != 0 {
 		t.Errorf("Character was incorrect, got: %d, want: %d.", tokens[1].Type, 0)
 	}
+}
+func TestDoubleToken(t *testing.T) {
+	scanner := NewScanner("!=")
+	tokens := scanner.scanTokens()
+	for _, v := range tokens {
+		js, _ := json.Marshal(v)
+		fmt.Println(string(js))
+	}
+	if len(tokens) != 3 {
+		t.Errorf("Length was incorrect, got: %d, want: %d.", len(tokens), 3)
+	}
+
 }

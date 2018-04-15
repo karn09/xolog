@@ -52,14 +52,64 @@ func (s *Scanner) scanToken() {
 		s.addToken(token.SEMICOLON, nil)
 	case "*":
 		s.addToken(token.STAR, nil)
+	case "!":
+		if s.match("=") {
+			s.addToken(token.BANG_EQUAL, nil)
+		} else {
+			s.addToken(token.BANG, nil)
+		}
+	case "=":
+		if s.match("=") {
+			s.addToken(token.EQUAL_EQUAL, nil)
+		} else {
+			s.addToken(token.EQUAL, nil)
+		}
+	case "<":
+		if s.match("=") {
+			s.addToken(token.LESS_EQUAL, nil)
+		} else {
+			s.addToken(token.LESS, nil)
+		}
+	case ">":
+		if s.match("=") {
+			s.addToken(token.GREATER_EQUAL, nil)
+		} else {
+			s.addToken(token.GREATER, nil)
+		}
 	default:
 		error.Error(s.line, "Unexpected character.")
 	}
 }
 
+func (s *Scanner) match(expected string) bool {
+	if s.isAtEnd() {
+		return false
+	}
+	text := s.source[s.start+1 : s.current+1]
+	if text != expected {
+		return false
+	}
+	s.current++
+	return true
+}
+
+func (s *Scanner) isAtEnd() bool {
+	if s.current >= len(s.source) {
+		return true
+	}
+	return false
+}
+
 func (s *Scanner) advance() string {
 	s.current++
 	return string(s.source[s.current-1])
+}
+
+func (s *Scanner) peek() string {
+	if s.isAtEnd() {
+		return "\\0"
+	}
+	return s.source[s.start+1 : s.current+1]
 }
 
 func (s *Scanner) addToken(tokenType token.TokenType, literal interface{}) []token.Token {
