@@ -7,6 +7,10 @@ import (
 	"strings"
 )
 
+var (
+	hadError bool
+)
+
 func runPrompt() {
 	scanner := bufio.NewScanner(os.Stdin)
 
@@ -16,6 +20,11 @@ func runPrompt() {
 
 	for scanner.Scan() {
 		run(scanner.Text())
+
+		if hadError {
+			os.Exit(65)
+		}
+
 		fmt.Print("> ")
 	}
 
@@ -32,7 +41,14 @@ func runFile(path string) {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	bufio.NewReader(file)
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		run(scanner.Text())
+
+		if hadError {
+			os.Exit(65)
+		}
+	}
 }
 
 func run(src string) {
@@ -42,6 +58,15 @@ func run(src string) {
 		fmt.Println(scanner.Text())
 	}
 
+}
+
+func error(line int, message string) {
+	report(line, "", message)
+}
+
+func report(line int, where string, message string) {
+	fmt.Printf("\n[line %d] Error %s : %s\n", line, where, message)
+	hadError = true
 }
 
 func main() {
