@@ -76,8 +76,21 @@ func (s *Scanner) scanToken() {
 		} else {
 			s.addToken(token.GREATER, nil)
 		}
+	case "\\":
+		if s.match("\\") {
+			for s.peek() != "\n" && !s.isAtEnd() {
+				s.advance()
+			}
+		} else {
+			s.addToken(token.SLASH, nil)
+		}
+	case " ":
+	case "\t":
+	case "\r":
+	case "\n":
+		s.line++
 	default:
-		error.Error(s.line, "Unexpected character.")
+		error.Error(s.line, "Unexpected character: "+c)
 	}
 }
 
@@ -107,9 +120,11 @@ func (s *Scanner) advance() string {
 
 func (s *Scanner) peek() string {
 	if s.isAtEnd() {
-		return "\\0"
+		return "\000"
 	}
-	return s.source[s.start+1 : s.current+1]
+	c := string(s.source[s.current+1])
+	// fmt.Print(c)
+	return c
 }
 
 func (s *Scanner) addToken(tokenType token.TokenType, literal interface{}) []token.Token {

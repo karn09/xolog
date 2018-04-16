@@ -1,8 +1,6 @@
 package scanner
 
 import (
-	"encoding/json"
-	"fmt"
 	"testing"
 	"xolog/token"
 )
@@ -58,12 +56,52 @@ func TestAddToken(t *testing.T) {
 func TestDoubleToken(t *testing.T) {
 	scanner := NewScanner("!=")
 	tokens := scanner.scanTokens()
-	for _, v := range tokens {
-		js, _ := json.Marshal(v)
-		fmt.Println(string(js))
-	}
 	if len(tokens) != 3 {
 		t.Errorf("Length was incorrect, got: %d, want: %d.", len(tokens), 3)
 	}
+	if tokens[1].Lexeme != "!=" {
+		t.Errorf("Character was incorrect, got: %s, want: %s.", tokens[1].Lexeme, "!=")
+	}
+}
+func TestNewLineToken(t *testing.T) {
+	scanner := NewScanner("\n{\n}")
+	tokens := scanner.scanTokens()
+	// 4 tokens, \\aEOF
+	if len(tokens) != 5 {
+		t.Errorf("Length was incorrect, got: %d, want: %d.", len(tokens), 5)
+	}
+	if tokens[1].Lexeme != "{" {
+		t.Errorf("Character was incorrect, got: %s, want: %s.", tokens[1].Lexeme, "{")
+	}
+	if tokens[1].Line != 2 {
+		t.Errorf("Line was incorrect, got: %d, want: %d.", tokens[1].Line, 2)
+	}
+	if tokens[3].Line != 3 {
+		t.Errorf("Line was incorrect, got: %d, want: %d.", tokens[1].Line, 3)
+	}
+	if tokens[3].Lexeme != "}" {
+		t.Errorf("Character was incorrect, got: %s, want: %s.", tokens[3].Lexeme, "}")
+	}
+}
+func TestSlashToken(t *testing.T) {
+	scanner := NewScanner("\\\\ comment\n{}")
+	tokens := scanner.scanTokens()
+	// for _, v := range tokens {
+	// 	js, _ := json.Marshal(v)
+	// 	fmt.Println(string(js))
+	// }
+	if len(tokens) != 5 {
+		t.Errorf("Length was incorrect, got: %d, want: %d.", len(tokens), 5)
+	}
+	if tokens[7].Lexeme != "{" {
+		t.Errorf("Character was incorrect, got: %s, want: %s.", tokens[7].Lexeme, "{")
+	}
+}
 
+func TestPeek(t *testing.T) {
+	scanner := NewScanner("test")
+	c := scanner.peek()
+	if c != "e" {
+		t.Errorf("Character was incorrect, got: %s, want: %s.", c, "e")
+	}
 }
