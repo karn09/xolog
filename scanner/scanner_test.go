@@ -83,18 +83,17 @@ func TestNewLineToken(t *testing.T) {
 		t.Errorf("Character was incorrect, got: %s, want: %s.", tokens[3].Lexeme, "}")
 	}
 }
-func TestSlashToken(t *testing.T) {
+func TestCommentTokens(t *testing.T) {
 	scanner := NewScanner("\\\\ comment\n{}")
 	tokens := scanner.scanTokens()
-	// for _, v := range tokens {
-	// 	js, _ := json.Marshal(v)
-	// 	fmt.Println(string(js))
-	// }
-	if len(tokens) != 5 {
-		t.Errorf("Length was incorrect, got: %d, want: %d.", len(tokens), 5)
+	if len(tokens) != 14 {
+		t.Errorf("Length was incorrect, got: %d, want: %d.", len(tokens), 14)
 	}
-	if tokens[7].Lexeme != "{" {
-		t.Errorf("Character was incorrect, got: %s, want: %s.", tokens[7].Lexeme, "{")
+	if tokens[11].Lexeme != "{" {
+		t.Errorf("Character was incorrect, got: %s, want: %s.", tokens[11].Lexeme, "{")
+	}
+	if tokens[11].Line != 2 {
+		t.Errorf("Line was incorrect, got: %d, want: %d.", tokens[11].Line, 2)
 	}
 }
 
