@@ -81,6 +81,8 @@ func (s *Scanner) scanToken() {
 			for s.peek() != "\n" && !s.isAtEnd() {
 				s.advance()
 			}
+			// advance one more time to place current cursor on \n
+			s.advance()
 		} else {
 			s.addToken(token.SLASH, nil)
 		}
