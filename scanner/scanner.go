@@ -16,7 +16,7 @@ type Scanner struct {
 
 // NewScanner accepts a string, and returns the initialized Scanner struct.
 func NewScanner(source string) *Scanner {
-	return &Scanner{source: source, start: 0, current: 0, line: 1, tokens: make([]token.Token, len(source)+1)}
+	return &Scanner{source: source, start: 0, current: 0, line: 1, tokens: []token.Token{}}
 }
 
 // ScanTokens will return an array of source length tokens of type Token.
@@ -26,7 +26,7 @@ func (s *Scanner) ScanTokens() []token.Token {
 		s.scanToken()
 	}
 	eof := token.Token{Type: token.EOF, Lexeme: "", Literal: nil, Line: s.line}
-	s.tokens[s.current] = eof
+	s.tokens = append(s.tokens, eof)
 	return s.tokens
 }
 
@@ -134,6 +134,6 @@ func (s *Scanner) peek() string {
 func (s *Scanner) addToken(tokenType token.TokenType, literal interface{}) []token.Token {
 	text := s.source[s.start:s.current]
 	token := token.Token{Type: tokenType, Lexeme: text, Literal: literal, Line: s.line}
-	s.tokens[s.current-1] = token
+	s.tokens = append(s.tokens, token)
 	return s.tokens
 }
