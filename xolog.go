@@ -2,9 +2,10 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"os"
-	"strings"
+	"xolog/scanner"
 )
 
 var (
@@ -36,28 +37,28 @@ func runFile(path string) {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		run(scanner.Text())
+	defer file.Close()
+
+	buf := bytes.Buffer{}
+	buf.ReadFrom(file)
+	content := buf.String()
+
+	run(content)
+	if hadError {
+		os.Exit(65)
 	}
+
 }
 
 func run(src string) {
-	scanner := bufio.NewScanner(strings.NewReader(src))
-	scanner.Split(bufio.ScanWords)
-	for scanner.Scan() {
-		fmt.Println(scanner.Text())
+	s := scanner.NewScanner(src)
+	tokens := s.ScanTokens()
+	for _, token := range tokens {
+		fmt.Println(token)
 	}
-
-}
-
-func error(line int, message string) {
-	report(line, "", message)
-}
-
-func report(line int, where string, message string) {
-	fmt.Printf("\n[line %d] Error %s : %s\n", line, where, message)
-	hadError = true
+	if s.HadError {
+		hadError = true
+	}
 }
 
 func main() {

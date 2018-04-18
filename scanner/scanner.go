@@ -5,21 +5,22 @@ import (
 	"xolog/token"
 )
 
-// type tokens []token.Token
-
 type Scanner struct {
-	source  string
-	start   int
-	current int
-	line    int
-	tokens  []token.Token
+	source   string
+	start    int
+	current  int
+	line     int
+	tokens   []token.Token
+	HadError bool
 }
 
+// NewScanner accepts a string, and returns the initialized Scanner struct.
 func NewScanner(source string) *Scanner {
 	return &Scanner{source: source, start: 0, current: 0, line: 1, tokens: make([]token.Token, len(source)+1)}
 }
 
-func (s *Scanner) scanTokens() []token.Token {
+// ScanTokens will return an array of source length tokens of type Token.
+func (s *Scanner) ScanTokens() []token.Token {
 	for s.current < len(s.source) {
 		s.start = s.current
 		s.scanToken()
@@ -81,8 +82,6 @@ func (s *Scanner) scanToken() {
 			for s.peek() != "\n" && !s.isAtEnd() {
 				s.advance()
 			}
-			// advance one more time to place current cursor on \n
-			s.advance()
 		} else {
 			s.addToken(token.SLASH, nil)
 		}
@@ -93,6 +92,7 @@ func (s *Scanner) scanToken() {
 		s.line++
 	default:
 		error.Error(s.line, "Unexpected character: "+c)
+		s.HadError = true
 	}
 }
 
@@ -100,7 +100,7 @@ func (s *Scanner) match(expected string) bool {
 	if s.isAtEnd() {
 		return false
 	}
-	text := s.source[s.start+1 : s.current+1]
+	text := string(s.source[s.current])
 	if text != expected {
 		return false
 	}
@@ -115,20 +115,22 @@ func (s *Scanner) isAtEnd() bool {
 	return false
 }
 
+// advance will consume the current token, and return the consumed token.
 func (s *Scanner) advance() string {
 	s.current++
 	return string(s.source[s.current-1])
 }
 
+// peek will return the current token, without consuming
 func (s *Scanner) peek() string {
 	if s.isAtEnd() {
 		return "\000"
 	}
-	c := string(s.source[s.current+1])
-	// fmt.Print(c)
+	c := string(s.source[s.current])
 	return c
 }
 
+// addToken will add token type and lexeme to returned tokens array.
 func (s *Scanner) addToken(tokenType token.TokenType, literal interface{}) []token.Token {
 	text := s.source[s.start:s.current]
 	token := token.Token{Type: tokenType, Lexeme: text, Literal: literal, Line: s.line}
