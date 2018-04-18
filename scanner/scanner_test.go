@@ -6,67 +6,6 @@ import (
 	"xolog/token"
 )
 
-func TestAdvance(t *testing.T) {
-	scanner := NewScanner("{(")
-	leftBrace := scanner.advance()
-	if leftBrace != "{" {
-		t.Errorf("Character was incorrect, got: %s, want: %s.", leftBrace, "{")
-	}
-	leftParen := scanner.advance()
-	if leftParen != "(" {
-		t.Errorf("Character was incorrect, got: %s, want: %s.", leftParen, "(")
-	}
-}
-
-func TestAddToken(t *testing.T) {
-	scanner := NewScanner("(")
-	scanner.advance()
-	tokens := scanner.addToken(token.LEFT_PAREN, nil)
-	if len(tokens) != 2 {
-		t.Errorf("Length was incorrect, got: %d, want: %d.", len(tokens), 2)
-	}
-	if tokens[0].Lexeme != "(" {
-		t.Errorf("Character was incorrect, got: %s, want: %s.", tokens[0].Lexeme, "(")
-	}
-	if tokens[1].Lexeme != "" {
-		t.Errorf("Character was incorrect, got: %s, want: %s.", tokens[1].Lexeme, "")
-	}
-	if tokens[1].Type != 0 {
-		t.Errorf("Character was incorrect, got: %d, want: %d.", tokens[1].Type, 0)
-	}
-}
-func TestCommentTokens(t *testing.T) {
-	scanner := NewScanner("\\\\ comment\n{}")
-	tokens := scanner.ScanTokens()
-	if tokens[0].Lexeme == "\\" {
-		t.Errorf("Character was incorrect, got: %s, want: %s.", tokens[0].Lexeme, "")
-	}
-	if tokens[1].Lexeme == "\\" {
-		t.Errorf("Character was incorrect, got: %s, want: %s.", tokens[1].Lexeme, "")
-	}
-	if len(tokens) != 14 {
-		t.Errorf("Length was incorrect, got: %d, want: %d.", len(tokens), 14)
-	}
-	if tokens[11].Lexeme != "{" {
-		t.Errorf("Character was incorrect, got: %s, want: %s.", tokens[11].Lexeme, "{")
-	}
-	if tokens[13].Line != 2 {
-		t.Errorf("Line was incorrect, got: %d, want: %d.", tokens[13].Line, 2)
-	}
-}
-
-func TestPeek(t *testing.T) {
-	scanner := NewScanner("test")
-	c := scanner.peek()
-	if c != "t" {
-		t.Errorf("Character was incorrect, got: %s, want: %s.", c, "t")
-	}
-	c2 := scanner.peek()
-	if c2 != "t" {
-		t.Errorf("Character was incorrect, got: %s, want: %s.", c2, "t")
-	}
-}
-
 func TestNewScanner(t *testing.T) {
 	type args struct {
 		source string
@@ -79,7 +18,7 @@ func TestNewScanner(t *testing.T) {
 		{
 			name: "Will return struct of proper shape.",
 			args: args{"TEST"},
-			want: &Scanner{source: "TEST", start: 0, current: 0, line: 1, tokens: make([]token.Token, len("TEST")+1)},
+			want: &Scanner{source: "TEST", start: 0, current: 0, line: 1, tokens: []token.Token{}},
 		},
 	}
 	for _, tt := range tests {
@@ -107,19 +46,20 @@ func TestScanner_ScanTokens(t *testing.T) {
 	}{
 		{
 			name:   "Will return token array of proper length, containing proper values.",
-			fields: fields{source: "TE", start: 0, current: 0, line: 1, tokens: make([]token.Token, len("TE")+1)},
-			want:   append(make([]token.Token, len("TE")), token.Token{Type: token.EOF, Lexeme: "", Literal: nil, Line: 1}),
+			fields: fields{source: "TE", start: 0, current: 0, line: 1, tokens: []token.Token{}},
+			want: []token.Token{
+				{
+					Type:    token.EOF,
+					Lexeme:  "",
+					Literal: nil,
+					Line:    1,
+				},
+			},
 		},
 		{
 			name:   "Will handle double tokens.",
-			fields: fields{source: "!=", start: 0, current: 0, line: 1, tokens: make([]token.Token, len("!=")+1)},
+			fields: fields{source: "!=", start: 0, current: 0, line: 1, tokens: []token.Token{}},
 			want: []token.Token{
-				{
-					Type:    0,
-					Lexeme:  "",
-					Literal: nil,
-					Line:    0,
-				},
 				{
 					Type:    token.BANG_EQUAL,
 					Lexeme:  "!=",
@@ -136,44 +76,8 @@ func TestScanner_ScanTokens(t *testing.T) {
 		},
 		{
 			name:   "Will handle comment tokens.",
-			fields: fields{source: "//te \n{", start: 0, current: 0, line: 1, tokens: make([]token.Token, len("// te \n{")+1)},
+			fields: fields{source: "//te \n{", start: 0, current: 0, line: 1, tokens: []token.Token{}},
 			want: []token.Token{
-				{
-					Type:    0,
-					Lexeme:  "",
-					Literal: nil,
-					Line:    0,
-				},
-				{
-					Type:    0,
-					Lexeme:  "",
-					Literal: nil,
-					Line:    0,
-				},
-				{
-					Type:    0,
-					Lexeme:  "",
-					Literal: nil,
-					Line:    0,
-				},
-				{
-					Type:    0,
-					Lexeme:  "",
-					Literal: nil,
-					Line:    0,
-				},
-				{
-					Type:    0,
-					Lexeme:  "",
-					Literal: nil,
-					Line:    0,
-				},
-				{
-					Type:    0,
-					Lexeme:  "",
-					Literal: nil,
-					Line:    0,
-				},
 				{
 					Type:    token.LEFT_BRACE,
 					Lexeme:  "{",
@@ -186,17 +90,11 @@ func TestScanner_ScanTokens(t *testing.T) {
 					Literal: nil,
 					Line:    2,
 				},
-				{
-					Type:    0,
-					Lexeme:  "",
-					Literal: nil,
-					Line:    0,
-				},
 			},
 		},
 		{
 			name:   "Will return token array of proper length, containing proper values.",
-			fields: fields{source: "({})", start: 0, current: 0, line: 1, tokens: make([]token.Token, len("({})")+1)},
+			fields: fields{source: "({})", start: 0, current: 0, line: 1, tokens: []token.Token{}},
 			want: []token.Token{
 				{
 					Type:    token.LEFT_PAREN,
@@ -232,19 +130,13 @@ func TestScanner_ScanTokens(t *testing.T) {
 		},
 		{
 			name:   "Will return token array of proper length, containing proper values, and handle newline",
-			fields: fields{source: "(\n{", start: 0, current: 0, line: 1, tokens: make([]token.Token, len("(\n{")+1)},
+			fields: fields{source: "(\n{", start: 0, current: 0, line: 1, tokens: []token.Token{}},
 			want: []token.Token{
 				{
 					Type:    token.LEFT_PAREN,
 					Lexeme:  "(",
 					Literal: nil,
 					Line:    1,
-				},
-				{
-					Type:    0,
-					Lexeme:  "",
-					Literal: nil,
-					Line:    0,
 				},
 				{
 					Type:    token.LEFT_BRACE,
@@ -299,19 +191,13 @@ func TestScanner_scanToken(t *testing.T) {
 		},
 		{
 			name:   "Will advance, and create matching token within first array index..",
-			fields: fields{source: "{", start: 0, current: 0, line: 1, tokens: make([]token.Token, len("{")+1)},
+			fields: fields{source: "{", start: 0, current: 0, line: 1, tokens: []token.Token{}},
 			want: &Scanner{source: "{", start: 0, current: 1, line: 1, tokens: []token.Token{
 				{
 					Type:    token.LEFT_BRACE,
 					Lexeme:  "{",
 					Literal: nil,
 					Line:    1,
-				},
-				{
-					Type:    0,
-					Lexeme:  "",
-					Literal: nil,
-					Line:    0,
 				},
 			}, HadError: false},
 		},
@@ -353,7 +239,32 @@ func TestScanner_match(t *testing.T) {
 		args   args
 		want   bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "match is false at end",
+			fields: fields{
+				source:   "",
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			args: args{""},
+			want: false,
+		},
+		{
+			name: "match is false when unexpected",
+			fields: fields{
+				source:   "!",
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			args: args{"&"},
+			want: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -386,7 +297,30 @@ func TestScanner_isAtEnd(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "Return true at end",
+			fields: fields{
+				source:   "",
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			want: true,
+		},
+		{
+			name: "Return false when not at end end",
+			fields: fields{
+				source:   "{",
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			want: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -452,7 +386,30 @@ func TestScanner_peek(t *testing.T) {
 		fields fields
 		want   string
 	}{
-		// TODO: Add test cases.
+		{
+			name: "Peek at end, returns EOF",
+			fields: fields{
+				source:   "",
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			want: "\000",
+		},
+		{
+			name: "Peek returns string",
+			fields: fields{
+				source:   "{",
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			want: "{",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
