@@ -19,7 +19,7 @@ func TestAdvance(t *testing.T) {
 
 func TestScanTokens(t *testing.T) {
 	scanner := NewScanner("({{(")
-	tokens := scanner.scanTokens()
+	tokens := scanner.ScanTokens()
 	if len(tokens) != 5 {
 		t.Errorf("Length was incorrect, got: %d, want: %d.", len(tokens), 5)
 	}
@@ -55,7 +55,7 @@ func TestAddToken(t *testing.T) {
 }
 func TestDoubleToken(t *testing.T) {
 	scanner := NewScanner("!=")
-	tokens := scanner.scanTokens()
+	tokens := scanner.ScanTokens()
 	if len(tokens) != 3 {
 		t.Errorf("Length was incorrect, got: %d, want: %d.", len(tokens), 3)
 	}
@@ -65,8 +65,7 @@ func TestDoubleToken(t *testing.T) {
 }
 func TestNewLineToken(t *testing.T) {
 	scanner := NewScanner("\n{\n}")
-	tokens := scanner.scanTokens()
-	// 4 tokens, \\aEOF
+	tokens := scanner.ScanTokens()
 	if len(tokens) != 5 {
 		t.Errorf("Length was incorrect, got: %d, want: %d.", len(tokens), 5)
 	}
@@ -85,22 +84,32 @@ func TestNewLineToken(t *testing.T) {
 }
 func TestCommentTokens(t *testing.T) {
 	scanner := NewScanner("\\\\ comment\n{}")
-	tokens := scanner.scanTokens()
+	tokens := scanner.ScanTokens()
+	if tokens[0].Lexeme == "\\" {
+		t.Errorf("Character was incorrect, got: %s, want: %s.", tokens[0].Lexeme, "")
+	}
+	if tokens[1].Lexeme == "\\" {
+		t.Errorf("Character was incorrect, got: %s, want: %s.", tokens[1].Lexeme, "")
+	}
 	if len(tokens) != 14 {
 		t.Errorf("Length was incorrect, got: %d, want: %d.", len(tokens), 14)
 	}
 	if tokens[11].Lexeme != "{" {
 		t.Errorf("Character was incorrect, got: %s, want: %s.", tokens[11].Lexeme, "{")
 	}
-	if tokens[11].Line != 2 {
-		t.Errorf("Line was incorrect, got: %d, want: %d.", tokens[11].Line, 2)
+	if tokens[13].Line != 2 {
+		t.Errorf("Line was incorrect, got: %d, want: %d.", tokens[13].Line, 2)
 	}
 }
 
 func TestPeek(t *testing.T) {
 	scanner := NewScanner("test")
 	c := scanner.peek()
-	if c != "e" {
-		t.Errorf("Character was incorrect, got: %s, want: %s.", c, "e")
+	if c != "t" {
+		t.Errorf("Character was incorrect, got: %s, want: %s.", c, "t")
+	}
+	c2 := scanner.peek()
+	if c2 != "t" {
+		t.Errorf("Character was incorrect, got: %s, want: %s.", c2, "t")
 	}
 }
