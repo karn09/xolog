@@ -155,7 +155,7 @@ func TestScanner_ScanTokens(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Scanner{
+			s := Scanner{
 				source:   tt.fields.source,
 				start:    tt.fields.start,
 				current:  tt.fields.current,
@@ -182,17 +182,17 @@ func TestScanner_scanToken(t *testing.T) {
 	tests := []struct {
 		name   string
 		fields fields
-		want   *Scanner
+		want   Scanner
 	}{
 		{
 			name:   "Will advance token, and log error.",
 			fields: fields{source: "TE", start: 0, current: 0, line: 1, tokens: make([]token.Token, len("TE")+1)},
-			want:   &Scanner{source: "TE", start: 0, current: 1, line: 1, tokens: make([]token.Token, len("TE")+1), HadError: true},
+			want:   Scanner{source: "TE", start: 0, current: 1, line: 1, tokens: make([]token.Token, len("TE")+1), HadError: true},
 		},
 		{
 			name:   "Will advance, and create matching token within first array index..",
 			fields: fields{source: "{", start: 0, current: 0, line: 1, tokens: []token.Token{}},
-			want: &Scanner{source: "{", start: 0, current: 1, line: 1, tokens: []token.Token{
+			want: Scanner{source: "{", start: 0, current: 1, line: 1, tokens: []token.Token{
 				{
 					Type:    token.LEFT_BRACE,
 					Lexeme:  "{",
@@ -204,7 +204,7 @@ func TestScanner_scanToken(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Scanner{
+			s := Scanner{
 				source:   tt.fields.source,
 				start:    tt.fields.start,
 				current:  tt.fields.current,
@@ -268,7 +268,7 @@ func TestScanner_match(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Scanner{
+			s := Scanner{
 				source:   tt.fields.source,
 				start:    tt.fields.start,
 				current:  tt.fields.current,
@@ -324,7 +324,7 @@ func TestScanner_isAtEnd(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Scanner{
+			s := Scanner{
 				source:   tt.fields.source,
 				start:    tt.fields.start,
 				current:  tt.fields.current,
@@ -357,7 +357,7 @@ func TestScanner_advance(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Scanner{
+			s := Scanner{
 				source:   tt.fields.source,
 				start:    tt.fields.start,
 				current:  tt.fields.current,
@@ -413,7 +413,7 @@ func TestScanner_peek(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Scanner{
+			s := Scanner{
 				source:   tt.fields.source,
 				start:    tt.fields.start,
 				current:  tt.fields.current,
@@ -451,7 +451,7 @@ func TestScanner_addToken(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Scanner{
+			s := Scanner{
 				source:   tt.fields.source,
 				start:    tt.fields.start,
 				current:  tt.fields.current,
@@ -461,6 +461,137 @@ func TestScanner_addToken(t *testing.T) {
 			}
 			if got := s.addToken(tt.args.tokenType, tt.args.literal); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Scanner.addToken() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestScanner_string(t *testing.T) {
+	type fields struct {
+		source   string
+		start    int
+		current  int
+		line     int
+		tokens   []token.Token
+		HadError bool
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   Scanner
+	}{
+		{
+			name: "Will add string token",
+			fields: fields{
+				source:   "'test'",
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			want: Scanner{
+				source:  "'test'",
+				start:   0,
+				current: 6,
+				line:    1,
+				tokens: []token.Token{
+					{
+						Type:    token.STRING,
+						Lexeme:  "'test'",
+						Literal: "test",
+						Line:    1,
+					},
+				},
+				HadError: false,
+			},
+		},
+		{
+			name: "Will handle newline within string",
+			fields: fields{
+				source:   "'test \n more'",
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			want: Scanner{
+				source:  "'test \n more'",
+				start:   0,
+				current: 13,
+				line:    2,
+				tokens: []token.Token{
+					{
+						Type:    token.STRING,
+						Lexeme:  "'test \n more'",
+						Literal: "test \n more",
+						Line:    2,
+					},
+				},
+				HadError: false,
+			},
+		},
+		{
+			name: "Will handle unterminated string",
+			fields: fields{
+				source:   "'test",
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			want: Scanner{
+				source:   "'test",
+				start:    0,
+				current:  5,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+		},
+		{
+			name: "Will handle quote strings",
+			fields: fields{
+				source:   `"h,ello"`,
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			want: Scanner{
+				source:  `"h,ello"`,
+				start:   0,
+				current: 8,
+				line:    1,
+				tokens: []token.Token{
+					{
+						Type:    token.STRING,
+						Lexeme:  `"h,ello"`,
+						Literal: "h,ello",
+						Line:    1,
+					},
+				},
+				HadError: false,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := Scanner{
+				source:   tt.fields.source,
+				start:    tt.fields.start,
+				current:  tt.fields.current,
+				line:     tt.fields.line,
+				tokens:   tt.fields.tokens,
+				HadError: tt.fields.HadError,
+			}
+			// string is called by scanToken as cases all start with opening quote
+			s.scanToken()
+			if got := s; !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("string() = %v, want %v", got, tt.want)
 			}
 		})
 	}

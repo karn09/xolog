@@ -14,7 +14,7 @@ type Scanner struct {
 	HadError bool
 }
 
-// NewScanner accepts a string, and returns the initialized Scanner struct.
+// NewScanner accepts a string, and returns a pointer to the initialized Scanner struct.
 func NewScanner(source string) *Scanner {
 	return &Scanner{source: source, start: 0, current: 0, line: 1, tokens: []token.Token{}}
 }
@@ -77,8 +77,8 @@ func (s *Scanner) scanToken() {
 		} else {
 			s.addToken(token.GREATER, nil)
 		}
-	case "\\":
-		if s.match("\\") {
+	case `\`:
+		if s.match(`\`) {
 			for s.peek() != "\n" && !s.isAtEnd() {
 				s.advance()
 			}
@@ -90,6 +90,10 @@ func (s *Scanner) scanToken() {
 	case "\r":
 	case "\n":
 		s.line++
+	case "'":
+		s.string()
+	case `"`:
+		s.string()
 	default:
 		error.Error(s.line, "Unexpected character: "+c)
 		s.HadError = true
@@ -106,6 +110,22 @@ func (s *Scanner) match(expected string) bool {
 	}
 	s.current++
 	return true
+}
+
+func (s *Scanner) string() {
+	for s.peek() != `"` && s.peek() != "'" && !s.isAtEnd() {
+		if s.peek() == "\n" {
+			s.line++
+		}
+		s.advance()
+	}
+	if s.isAtEnd() {
+		error.Error(s.line, "Unterminated string.")
+		return
+	}
+	s.advance()
+	val := s.source[s.start+1 : s.current-1]
+	s.addToken(token.STRING, val)
 }
 
 func (s *Scanner) isAtEnd() bool {
