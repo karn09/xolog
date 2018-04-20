@@ -652,3 +652,65 @@ func TestScanner_peekNext(t *testing.T) {
 		})
 	}
 }
+
+func TestScanner_isDigit(t *testing.T) {
+	type fields struct {
+		source   string
+		start    int
+		current  int
+		line     int
+		tokens   []token.Token
+		HadError bool
+	}
+	type args struct {
+		c string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   bool
+	}{
+		{
+			name: "Will be true if number encountered",
+			fields: fields{
+				source:   `1`,
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			args: args{"1"},
+			want: true,
+		},
+		{
+			name: "Will be false if non-number encountered",
+			fields: fields{
+				source:   `a`,
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			args: args{"a"},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Scanner{
+				source:   tt.fields.source,
+				start:    tt.fields.start,
+				current:  tt.fields.current,
+				line:     tt.fields.line,
+				tokens:   tt.fields.tokens,
+				HadError: tt.fields.HadError,
+			}
+			if got := s.isDigit(tt.args.c); got != tt.want {
+				t.Errorf("Scanner.isDigit() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

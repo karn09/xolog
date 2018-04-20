@@ -1,6 +1,7 @@
 package scanner
 
 import (
+	"strconv"
 	"xolog/error"
 	"xolog/token"
 )
@@ -156,6 +157,14 @@ func (s *Scanner) peekNext() string {
 	}
 	c := string(s.source[s.current+1])
 	return c
+}
+
+func (s *Scanner) isDigit(c string) bool {
+	i, err := strconv.Atoi(c)
+	if err != nil {
+		return false
+	}
+	return i >= 0 && i <= 9
 }
 
 // addToken will add token type and lexeme to returned tokens array.
