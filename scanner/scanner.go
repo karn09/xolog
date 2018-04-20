@@ -150,6 +150,14 @@ func (s *Scanner) peek() string {
 	return c
 }
 
+func (s *Scanner) peekNext() string {
+	if s.current+1 >= len(s.source) {
+		return "\000"
+	}
+	c := string(s.source[s.current+1])
+	return c
+}
+
 // addToken will add token type and lexeme to returned tokens array.
 func (s *Scanner) addToken(tokenType token.TokenType, literal interface{}) []token.Token {
 	text := s.source[s.start:s.current]

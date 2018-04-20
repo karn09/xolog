@@ -596,3 +596,59 @@ func TestScanner_string(t *testing.T) {
 		})
 	}
 }
+
+func TestScanner_peekNext(t *testing.T) {
+	type fields struct {
+		source   string
+		start    int
+		current  int
+		line     int
+		tokens   []token.Token
+		HadError bool
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "Will peek on upcoming char",
+			fields: fields{
+				source:   `>=`,
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			want: "=",
+		},
+		{
+			name: "Will return ending if out of bounds",
+			fields: fields{
+				source:   `>`,
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			want: "\000",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Scanner{
+				source:   tt.fields.source,
+				start:    tt.fields.start,
+				current:  tt.fields.current,
+				line:     tt.fields.line,
+				tokens:   tt.fields.tokens,
+				HadError: tt.fields.HadError,
+			}
+			if got := s.peekNext(); got != tt.want {
+				t.Errorf("Scanner.peekNext() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
