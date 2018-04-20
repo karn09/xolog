@@ -96,8 +96,12 @@ func (s *Scanner) scanToken() {
 	case `"`:
 		s.string()
 	default:
-		error.Error(s.line, "Unexpected character: "+c)
-		s.HadError = true
+		if s.isDigit(c) {
+			s.number()
+		} else {
+			error.Error(s.line, "Unexpected character: "+c)
+			s.HadError = true
+		}
 	}
 }
 

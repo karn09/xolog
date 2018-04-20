@@ -752,6 +752,12 @@ func TestScanner_number(t *testing.T) {
 						Literal: 1.02,
 						Line:    1,
 					},
+					{
+						Type:    token.EOF,
+						Lexeme:  "",
+						Literal: nil,
+						Line:    1,
+					},
 				},
 				HadError: false,
 			},
@@ -778,6 +784,12 @@ func TestScanner_number(t *testing.T) {
 						Literal: float64(102),
 						Line:    1,
 					},
+					{
+						Type:    token.EOF,
+						Lexeme:  "",
+						Literal: nil,
+						Line:    1,
+					},
 				},
 				HadError: false,
 			},
@@ -793,7 +805,7 @@ func TestScanner_number(t *testing.T) {
 				tokens:   tt.fields.tokens,
 				HadError: tt.fields.HadError,
 			}
-			s.number()
+			s.ScanTokens()
 			if got := s; !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("number() = %v, want %v", got, tt.want)
 			}
