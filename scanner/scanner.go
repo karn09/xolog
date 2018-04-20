@@ -101,6 +101,7 @@ func (s *Scanner) scanToken() {
 	}
 }
 
+// match will compare unconsumed character with expected character
 func (s *Scanner) match(expected string) bool {
 	if s.isAtEnd() {
 		return false
@@ -113,6 +114,7 @@ func (s *Scanner) match(expected string) bool {
 	return true
 }
 
+// string will consume all tokens contained within " or ', add string token, with literal string.
 func (s *Scanner) string() {
 	for s.peek() != `"` && s.peek() != "'" && !s.isAtEnd() {
 		if s.peek() == "\n" {
@@ -129,6 +131,7 @@ func (s *Scanner) string() {
 	s.addToken(token.STRING, val)
 }
 
+// isAtEnd will return whether current is last.
 func (s *Scanner) isAtEnd() bool {
 	if s.current >= len(s.source) {
 		return true
@@ -151,6 +154,7 @@ func (s *Scanner) peek() string {
 	return c
 }
 
+// peekNext will return the next token without consuming.
 func (s *Scanner) peekNext() string {
 	if s.current+1 >= len(s.source) {
 		return "\000"
@@ -159,12 +163,29 @@ func (s *Scanner) peekNext() string {
 	return c
 }
 
+// isDigit will check whether character is an integer.
 func (s *Scanner) isDigit(c string) bool {
 	i, err := strconv.Atoi(c)
 	if err != nil {
 		return false
 	}
 	return i >= 0 && i <= 9
+}
+
+// number will consume, and finally add a number token, with float64 literal.
+func (s *Scanner) number() {
+	for s.isDigit(s.peek()) {
+		s.advance()
+	}
+	if s.peek() == "." && s.isDigit(s.peekNext()) {
+		s.advance()
+		for s.isDigit(s.peek()) {
+			s.advance()
+		}
+	}
+	text := s.source[s.start:s.current]
+	i, _ := strconv.ParseFloat(text, 64)
+	s.addToken(token.NUMBER, i)
 }
 
 // addToken will add token type and lexeme to returned tokens array.

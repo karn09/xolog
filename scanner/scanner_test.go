@@ -714,3 +714,89 @@ func TestScanner_isDigit(t *testing.T) {
 		})
 	}
 }
+
+func TestScanner_number(t *testing.T) {
+	type fields struct {
+		source   string
+		start    int
+		current  int
+		line     int
+		tokens   []token.Token
+		HadError bool
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   *Scanner
+	}{
+		// TODO: Add test cases.
+		{
+			name: "Will handle conversion of decimal string to float64",
+			fields: fields{
+				source:   "1.02",
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			want: &Scanner{
+				source:  "1.02",
+				start:   0,
+				current: 4,
+				line:    1,
+				tokens: []token.Token{
+					{
+						Type:    token.NUMBER,
+						Lexeme:  "1.02",
+						Literal: 1.02,
+						Line:    1,
+					},
+				},
+				HadError: false,
+			},
+		},
+		{
+			name: "Will handle number string conversion to float64",
+			fields: fields{
+				source:   "102",
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			want: &Scanner{
+				source:  "102",
+				start:   0,
+				current: 3,
+				line:    1,
+				tokens: []token.Token{
+					{
+						Type:    token.NUMBER,
+						Lexeme:  "102",
+						Literal: float64(102),
+						Line:    1,
+					},
+				},
+				HadError: false,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Scanner{
+				source:   tt.fields.source,
+				start:    tt.fields.start,
+				current:  tt.fields.current,
+				line:     tt.fields.line,
+				tokens:   tt.fields.tokens,
+				HadError: tt.fields.HadError,
+			}
+			s.number()
+			if got := s; !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("number() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
