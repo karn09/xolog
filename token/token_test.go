@@ -6,7 +6,7 @@ func TestToken_toString(t *testing.T) {
 	type fields struct {
 		Type    TokenType
 		Lexeme  string
-		Literal interface{}
+		Literal []rune
 		Line    int
 	}
 	tests := []struct {
@@ -22,7 +22,47 @@ func TestToken_toString(t *testing.T) {
 				Literal: nil,
 				Line:    0,
 			},
-			want: "0 ( %!s(<nil>)",
+			want: "0 ( []",
+		},
+		{
+			name: "STRING token to string.",
+			fields: fields{
+				Type:    STRING,
+				Lexeme:  "Hello",
+				Literal: []rune("Hello"),
+				Line:    0,
+			},
+			want: "20 Hello [H e l l o]",
+		},
+		{
+			name: "Number token to string.",
+			fields: fields{
+				Type:    NUMBER,
+				Lexeme:  "123",
+				Literal: []rune("123"),
+				Line:    0,
+			},
+			want: "21 123 [1 2 3]",
+		},
+		{
+			name: "Number token to string.",
+			fields: fields{
+				Type:    NUMBER,
+				Lexeme:  "123",
+				Literal: nil,
+				Line:    0,
+			},
+			want: "21 123 []",
+		},
+		{
+			name: "LEFT_PAREN token to string.",
+			fields: fields{
+				Type:    LEFT_PAREN,
+				Lexeme:  "(",
+				Literal: nil,
+				Line:    0,
+			},
+			want: "0 ( []",
 		},
 		{
 			name: "RIGHT_PAREN token to string.",
@@ -32,7 +72,7 @@ func TestToken_toString(t *testing.T) {
 				Literal: nil,
 				Line:    0,
 			},
-			want: "1 ) %!s(<nil>)",
+			want: "1 ) []",
 		},
 	}
 	for _, tt := range tests {
@@ -43,7 +83,7 @@ func TestToken_toString(t *testing.T) {
 				Literal: tt.fields.Literal,
 				Line:    tt.fields.Line,
 			}
-			if got := token.toString(); got != tt.want {
+			if got := token.String(); got != tt.want {
 				t.Errorf("Token.toString() = %v, want %v", got, tt.want)
 			}
 		})

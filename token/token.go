@@ -57,10 +57,10 @@ const (
 type Token struct {
 	Type    TokenType
 	Lexeme  string
-	Literal interface{}
+	Literal []rune
 	Line    int
 }
 
-func (t *Token) toString() string {
-	return fmt.Sprintf("%d %s %s", t.Type, t.Lexeme, t.Literal)
+func (t *Token) String() string {
+	return fmt.Sprintf("%d %s %c", t.Type, t.Lexeme, t.Literal)
 }
