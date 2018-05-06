@@ -18,7 +18,7 @@ func TestNewScanner(t *testing.T) {
 		{
 			name: "Will return struct of proper shape.",
 			args: args{"TEST"},
-			want: &Scanner{source: "TEST", start: 0, current: 0, line: 1, tokens: []token.Token{}},
+			want: &Scanner{source: []byte("TEST"), start: 0, current: 0, line: 1, tokens: []token.Token{}},
 		},
 	}
 	for _, tt := range tests {
@@ -32,7 +32,7 @@ func TestNewScanner(t *testing.T) {
 
 func TestScanner_ScanTokens(t *testing.T) {
 	type fields struct {
-		source   string
+		source   []byte
 		start    int
 		current  int
 		line     int
@@ -45,20 +45,20 @@ func TestScanner_ScanTokens(t *testing.T) {
 		want   []token.Token
 	}{
 		{
-			name:   "Will return token array of proper length, containing proper values.",
-			fields: fields{source: "TE", start: 0, current: 0, line: 1, tokens: []token.Token{}},
+			name:   "Unexpected characters, Return token array containing EOF only.",
+			fields: fields{source: []byte("TE"), start: 0, current: 0, line: 1, tokens: []token.Token{}},
 			want: []token.Token{
 				{
 					Type:    token.EOF,
-					Lexeme:  "",
+					Lexeme:  "\000",
 					Literal: nil,
 					Line:    1,
 				},
 			},
 		},
 		{
-			name:   "Will handle double tokens.",
-			fields: fields{source: "!=", start: 0, current: 0, line: 1, tokens: []token.Token{}},
+			name:   "BANG_EQUAL, BANG token parsed with EOF.",
+			fields: fields{source: []byte("!= !"), start: 0, current: 0, line: 1, tokens: []token.Token{}},
 			want: []token.Token{
 				{
 					Type:    token.BANG_EQUAL,
@@ -67,8 +67,128 @@ func TestScanner_ScanTokens(t *testing.T) {
 					Line:    1,
 				},
 				{
+					Type:    token.BANG,
+					Lexeme:  "!",
+					Literal: nil,
+					Line:    1,
+				},
+				{
 					Type:    token.EOF,
-					Lexeme:  "",
+					Lexeme:  "\000",
+					Literal: nil,
+					Line:    1,
+				},
+			},
+		},
+		{
+			name:   "COMMA token parsed with EOF.",
+			fields: fields{source: []byte(","), start: 0, current: 0, line: 1, tokens: []token.Token{}},
+			want: []token.Token{
+				{
+					Type:    token.COMMA,
+					Lexeme:  ",",
+					Literal: nil,
+					Line:    1,
+				},
+				{
+					Type:    token.EOF,
+					Lexeme:  "\000",
+					Literal: nil,
+					Line:    1,
+				},
+			},
+		},
+		{
+			name:   "DOT token parsed with EOF.",
+			fields: fields{source: []byte("."), start: 0, current: 0, line: 1, tokens: []token.Token{}},
+			want: []token.Token{
+				{
+					Type:    token.DOT,
+					Lexeme:  ".",
+					Literal: nil,
+					Line:    1,
+				},
+				{
+					Type:    token.EOF,
+					Lexeme:  "\000",
+					Literal: nil,
+					Line:    1,
+				},
+			},
+		},
+		{
+			name:   "LESS_EQUAL, LESS, GREATER, GREATER_EQUAL token parsed with EOF.",
+			fields: fields{source: []byte("<= < > >="), start: 0, current: 0, line: 1, tokens: []token.Token{}},
+			want: []token.Token{
+				{
+					Type:    token.LESS_EQUAL,
+					Lexeme:  "<=",
+					Literal: nil,
+					Line:    1,
+				},
+				{
+					Type:    token.LESS,
+					Lexeme:  "<",
+					Literal: nil,
+					Line:    1,
+				},
+				{
+					Type:    token.GREATER,
+					Lexeme:  ">",
+					Literal: nil,
+					Line:    1,
+				},
+				{
+					Type:    token.GREATER_EQUAL,
+					Lexeme:  ">=",
+					Literal: nil,
+					Line:    1,
+				},
+				{
+					Type:    token.EOF,
+					Lexeme:  "\000",
+					Literal: nil,
+					Line:    1,
+				},
+			},
+		},
+		{
+			name:   "EQUAL_EQUAL token parsed with EOF.",
+			fields: fields{source: []byte("=="), start: 0, current: 0, line: 1, tokens: []token.Token{}},
+			want: []token.Token{
+				{
+					Type:    token.EQUAL_EQUAL,
+					Lexeme:  "==",
+					Literal: nil,
+					Line:    1,
+				},
+				{
+					Type:    token.EOF,
+					Lexeme:  "\000",
+					Literal: nil,
+					Line:    1,
+				},
+			},
+		},
+		{
+			name:   "EQUAL_EQUAL,EQUAL token parsed with EOF.",
+			fields: fields{source: []byte("==="), start: 0, current: 0, line: 1, tokens: []token.Token{}},
+			want: []token.Token{
+				{
+					Type:    token.EQUAL_EQUAL,
+					Lexeme:  "==",
+					Literal: nil,
+					Line:    1,
+				},
+				{
+					Type:    token.EQUAL,
+					Lexeme:  "=",
+					Literal: nil,
+					Line:    1,
+				},
+				{
+					Type:    token.EOF,
+					Lexeme:  "\000",
 					Literal: nil,
 					Line:    1,
 				},
@@ -76,7 +196,7 @@ func TestScanner_ScanTokens(t *testing.T) {
 		},
 		{
 			name:   "Will handle comment tokens.",
-			fields: fields{source: "//te \n{", start: 0, current: 0, line: 1, tokens: []token.Token{}},
+			fields: fields{source: []byte("//te \n{"), start: 0, current: 0, line: 1, tokens: []token.Token{}},
 			want: []token.Token{
 				{
 					Type:    token.LEFT_BRACE,
@@ -86,15 +206,15 @@ func TestScanner_ScanTokens(t *testing.T) {
 				},
 				{
 					Type:    token.EOF,
-					Lexeme:  "",
+					Lexeme:  "\000",
 					Literal: nil,
 					Line:    2,
 				},
 			},
 		},
 		{
-			name:   "Will return token array of proper length, containing proper values.",
-			fields: fields{source: "({})", start: 0, current: 0, line: 1, tokens: []token.Token{}},
+			name:   "LEFT_PAREN, LEFT_BRACE, RIGHT_BRACE, RIGHT_PAREN, EOF",
+			fields: fields{source: []byte("({})"), start: 0, current: 0, line: 1, tokens: []token.Token{}},
 			want: []token.Token{
 				{
 					Type:    token.LEFT_PAREN,
@@ -122,15 +242,15 @@ func TestScanner_ScanTokens(t *testing.T) {
 				},
 				{
 					Type:    token.EOF,
-					Lexeme:  "",
+					Lexeme:  "\000",
 					Literal: nil,
 					Line:    1,
 				},
 			},
 		},
 		{
-			name:   "Will return token array of proper length, containing proper values, and handle newline",
-			fields: fields{source: "(\n{", start: 0, current: 0, line: 1, tokens: []token.Token{}},
+			name:   "LEFT_PAREN, LEFT_BRACE, EOF token array, with line = 2 after newline",
+			fields: fields{source: []byte("(\n{"), start: 0, current: 0, line: 1, tokens: []token.Token{}},
 			want: []token.Token{
 				{
 					Type:    token.LEFT_PAREN,
@@ -146,9 +266,81 @@ func TestScanner_ScanTokens(t *testing.T) {
 				},
 				{
 					Type:    token.EOF,
-					Lexeme:  "",
+					Lexeme:  "\000",
 					Literal: nil,
 					Line:    2,
+				},
+			},
+		},
+		{
+			name:   "MINUS, PLUS, EOF token array",
+			fields: fields{source: []byte("-+"), start: 0, current: 0, line: 1, tokens: []token.Token{}},
+			want: []token.Token{
+				{
+					Type:    token.MINUS,
+					Lexeme:  "-",
+					Literal: nil,
+					Line:    1,
+				},
+				{
+					Type:    token.PLUS,
+					Lexeme:  "+",
+					Literal: nil,
+					Line:    1,
+				},
+				{
+					Type:    token.EOF,
+					Lexeme:  "\000",
+					Literal: nil,
+					Line:    1,
+				},
+			},
+		},
+		{
+			name:   "SEMICOLON, STAR, EOF token array",
+			fields: fields{source: []byte(";*"), start: 0, current: 0, line: 1, tokens: []token.Token{}},
+			want: []token.Token{
+				{
+					Type:    token.SEMICOLON,
+					Lexeme:  ";",
+					Literal: nil,
+					Line:    1,
+				},
+				{
+					Type:    token.STAR,
+					Lexeme:  "*",
+					Literal: nil,
+					Line:    1,
+				},
+				{
+					Type:    token.EOF,
+					Lexeme:  "\000",
+					Literal: nil,
+					Line:    1,
+				},
+			},
+		},
+		{
+			name:   "SLASH, EOF token array, ignore \\ comment",
+			fields: fields{source: []byte("\\,\\\\test"), start: 0, current: 0, line: 1, tokens: []token.Token{}},
+			want: []token.Token{
+				{
+					Type:    token.SLASH,
+					Lexeme:  "\\",
+					Literal: nil,
+					Line:    1,
+				},
+				{
+					Type:    token.COMMA,
+					Lexeme:  ",",
+					Literal: nil,
+					Line:    1,
+				},
+				{
+					Type:    token.EOF,
+					Lexeme:  "\000",
+					Literal: nil,
+					Line:    1,
 				},
 			},
 		},
@@ -172,7 +364,7 @@ func TestScanner_ScanTokens(t *testing.T) {
 
 func TestScanner_scanToken(t *testing.T) {
 	type fields struct {
-		source   string
+		source   []byte
 		start    int
 		current  int
 		line     int
@@ -186,13 +378,13 @@ func TestScanner_scanToken(t *testing.T) {
 	}{
 		{
 			name:   "Will advance token, and log error.",
-			fields: fields{source: "TE", start: 0, current: 0, line: 1, tokens: make([]token.Token, len("TE")+1)},
-			want:   Scanner{source: "TE", start: 0, current: 1, line: 1, tokens: make([]token.Token, len("TE")+1), HadError: true},
+			fields: fields{source: []byte("TE"), start: 0, current: 0, line: 1, tokens: make([]token.Token, len("TE")+1)},
+			want:   Scanner{source: []byte("TE"), start: 0, current: 1, line: 1, tokens: make([]token.Token, len("TE")+1), HadError: true},
 		},
 		{
 			name:   "Will advance, and create matching token within first array index..",
-			fields: fields{source: "{", start: 0, current: 0, line: 1, tokens: []token.Token{}},
-			want: Scanner{source: "{", start: 0, current: 1, line: 1, tokens: []token.Token{
+			fields: fields{source: []byte("{"), start: 0, current: 0, line: 1, tokens: []token.Token{}},
+			want: Scanner{source: []byte("{"), start: 0, current: 1, line: 1, tokens: []token.Token{
 				{
 					Type:    token.LEFT_BRACE,
 					Lexeme:  "{",
@@ -223,7 +415,7 @@ func TestScanner_scanToken(t *testing.T) {
 
 func TestScanner_match(t *testing.T) {
 	type fields struct {
-		source   string
+		source   []byte
 		start    int
 		current  int
 		line     int
@@ -231,7 +423,7 @@ func TestScanner_match(t *testing.T) {
 		HadError bool
 	}
 	type args struct {
-		expected string
+		expected rune
 	}
 	tests := []struct {
 		name   string
@@ -242,28 +434,54 @@ func TestScanner_match(t *testing.T) {
 		{
 			name: "match is false at end",
 			fields: fields{
-				source:   "",
+				source:   []byte(""),
 				start:    0,
 				current:  0,
 				line:     1,
 				tokens:   []token.Token{},
 				HadError: false,
 			},
-			args: args{""},
+			args: args{' '},
 			want: false,
 		},
 		{
 			name: "match is false when unexpected",
 			fields: fields{
-				source:   "!",
+				source:   []byte("!"),
 				start:    0,
 				current:  0,
 				line:     1,
 				tokens:   []token.Token{},
 				HadError: false,
 			},
-			args: args{"&"},
+			args: args{'&'},
 			want: false,
+		},
+		{
+			name: "match is true",
+			fields: fields{
+				source:   []byte("{"),
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			args: args{'{'},
+			want: true,
+		},
+		{
+			name: "match is true",
+			fields: fields{
+				source:   []byte("{("),
+				start:    0,
+				current:  1,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			args: args{'('},
+			want: true,
 		},
 	}
 	for _, tt := range tests {
@@ -285,7 +503,7 @@ func TestScanner_match(t *testing.T) {
 
 func TestScanner_isAtEnd(t *testing.T) {
 	type fields struct {
-		source   string
+		source   []byte
 		start    int
 		current  int
 		line     int
@@ -300,7 +518,7 @@ func TestScanner_isAtEnd(t *testing.T) {
 		{
 			name: "Return true at end",
 			fields: fields{
-				source:   "",
+				source:   []byte(""),
 				start:    0,
 				current:  0,
 				line:     1,
@@ -312,7 +530,7 @@ func TestScanner_isAtEnd(t *testing.T) {
 		{
 			name: "Return false when not at end end",
 			fields: fields{
-				source:   "{",
+				source:   []byte("{"),
 				start:    0,
 				current:  0,
 				line:     1,
@@ -341,7 +559,7 @@ func TestScanner_isAtEnd(t *testing.T) {
 
 func TestScanner_advance(t *testing.T) {
 	type fields struct {
-		source   string
+		source   []byte
 		start    int
 		current  int
 		line     int
@@ -351,9 +569,32 @@ func TestScanner_advance(t *testing.T) {
 	tests := []struct {
 		name   string
 		fields fields
-		want   string
+		want   rune
 	}{
-		// TODO: Add test cases.
+		{
+			name: "Return empty rune",
+			fields: fields{
+				source:   []byte(" "),
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			want: ' ',
+		},
+		{
+			name: "Return rune",
+			fields: fields{
+				source:   []byte("{"),
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			want: '{',
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -374,7 +615,7 @@ func TestScanner_advance(t *testing.T) {
 
 func TestScanner_peek(t *testing.T) {
 	type fields struct {
-		source   string
+		source   []byte
 		start    int
 		current  int
 		line     int
@@ -384,31 +625,55 @@ func TestScanner_peek(t *testing.T) {
 	tests := []struct {
 		name   string
 		fields fields
-		want   string
+		want   rune
 	}{
 		{
 			name: "Peek at end, returns EOF",
 			fields: fields{
-				source:   "",
+				source:   []byte(""),
 				start:    0,
 				current:  0,
 				line:     1,
 				tokens:   []token.Token{},
 				HadError: false,
 			},
-			want: "\000",
+			want: '\000',
+		},
+		{
+			name: "Peek on number, returns number",
+			fields: fields{
+				source:   []byte("1"),
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			want: '1',
 		},
 		{
 			name: "Peek returns string",
 			fields: fields{
-				source:   "{",
+				source:   []byte("{"),
 				start:    0,
 				current:  0,
 				line:     1,
 				tokens:   []token.Token{},
 				HadError: false,
 			},
-			want: "{",
+			want: '{',
+		},
+		{
+			name: "Peek returns string",
+			fields: fields{
+				source:   []byte("{("),
+				start:    0,
+				current:  1,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			want: '(',
 		},
 	}
 	for _, tt := range tests {
@@ -430,7 +695,7 @@ func TestScanner_peek(t *testing.T) {
 
 func TestScanner_addToken(t *testing.T) {
 	type fields struct {
-		source   string
+		source   []byte
 		start    int
 		current  int
 		line     int
@@ -439,7 +704,7 @@ func TestScanner_addToken(t *testing.T) {
 	}
 	type args struct {
 		tokenType token.TokenType
-		literal   interface{}
+		literal   []rune
 	}
 	tests := []struct {
 		name   string
@@ -447,7 +712,26 @@ func TestScanner_addToken(t *testing.T) {
 		args   args
 		want   []token.Token
 	}{
-		// TODO: Add test cases.
+		{
+			name: "Add comma token.",
+			fields: fields{
+				source:   []byte(","),
+				start:    0,
+				current:  1,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			args: args{token.COMMA, nil},
+			want: []token.Token{
+				{
+					Type:    token.COMMA,
+					Lexeme:  ",",
+					Literal: nil,
+					Line:    1,
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -468,7 +752,7 @@ func TestScanner_addToken(t *testing.T) {
 
 func TestScanner_string(t *testing.T) {
 	type fields struct {
-		source   string
+		source   []byte
 		start    int
 		current  int
 		line     int
@@ -483,7 +767,7 @@ func TestScanner_string(t *testing.T) {
 		{
 			name: "Will add string token",
 			fields: fields{
-				source:   "'test'",
+				source:   []byte("'test'"),
 				start:    0,
 				current:  0,
 				line:     1,
@@ -491,15 +775,15 @@ func TestScanner_string(t *testing.T) {
 				HadError: false,
 			},
 			want: Scanner{
-				source:  "'test'",
+				source:  []byte("'test'"),
 				start:   0,
-				current: 6,
+				current: 5,
 				line:    1,
 				tokens: []token.Token{
 					{
 						Type:    token.STRING,
-						Lexeme:  "'test'",
-						Literal: "test",
+						Lexeme:  "test",
+						Literal: []rune("test"),
 						Line:    1,
 					},
 				},
@@ -509,7 +793,7 @@ func TestScanner_string(t *testing.T) {
 		{
 			name: "Will handle newline within string",
 			fields: fields{
-				source:   "'test \n more'",
+				source:   []byte("\"test \n more\""),
 				start:    0,
 				current:  0,
 				line:     1,
@@ -517,15 +801,15 @@ func TestScanner_string(t *testing.T) {
 				HadError: false,
 			},
 			want: Scanner{
-				source:  "'test \n more'",
+				source:  []byte("\"test \n more\""),
 				start:   0,
-				current: 13,
+				current: 12,
 				line:    2,
 				tokens: []token.Token{
 					{
 						Type:    token.STRING,
-						Lexeme:  "'test \n more'",
-						Literal: "test \n more",
+						Lexeme:  "test \n more",
+						Literal: []rune("test \n more"),
 						Line:    2,
 					},
 				},
@@ -535,7 +819,7 @@ func TestScanner_string(t *testing.T) {
 		{
 			name: "Will handle unterminated string",
 			fields: fields{
-				source:   "'test",
+				source:   []byte("'test"),
 				start:    0,
 				current:  0,
 				line:     1,
@@ -543,7 +827,7 @@ func TestScanner_string(t *testing.T) {
 				HadError: false,
 			},
 			want: Scanner{
-				source:   "'test",
+				source:   []byte("'test"),
 				start:    0,
 				current:  5,
 				line:     1,
@@ -554,7 +838,7 @@ func TestScanner_string(t *testing.T) {
 		{
 			name: "Will handle quote strings",
 			fields: fields{
-				source:   `"h,ello"`,
+				source:   []byte(`"h,ello"`),
 				start:    0,
 				current:  0,
 				line:     1,
@@ -562,15 +846,41 @@ func TestScanner_string(t *testing.T) {
 				HadError: false,
 			},
 			want: Scanner{
-				source:  `"h,ello"`,
+				source:  []byte(`"h,ello"`),
 				start:   0,
-				current: 8,
+				current: 7,
 				line:    1,
 				tokens: []token.Token{
 					{
 						Type:    token.STRING,
-						Lexeme:  `"h,ello"`,
-						Literal: "h,ello",
+						Lexeme:  `h,ello`,
+						Literal: []rune("h,ello"),
+						Line:    1,
+					},
+				},
+				HadError: false,
+			},
+		},
+		{
+			name: "Will handle valid token after string",
+			fields: fields{
+				source:   []byte(`"h,ello"{`),
+				start:    0,
+				current:  0,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			want: Scanner{
+				source:  []byte(`"h,ello"{`),
+				start:   0,
+				current: 7,
+				line:    1,
+				tokens: []token.Token{
+					{
+						Type:    token.STRING,
+						Lexeme:  `h,ello`,
+						Literal: []rune("h,ello"),
 						Line:    1,
 					},
 				},
@@ -599,7 +909,7 @@ func TestScanner_string(t *testing.T) {
 
 func TestScanner_peekNext(t *testing.T) {
 	type fields struct {
-		source   string
+		source   []byte
 		start    int
 		current  int
 		line     int
@@ -609,31 +919,43 @@ func TestScanner_peekNext(t *testing.T) {
 	tests := []struct {
 		name   string
 		fields fields
-		want   string
+		want   rune
 	}{
 		{
 			name: "Will peek on upcoming char",
 			fields: fields{
-				source:   `>=`,
+				source:   []byte(`>=`),
 				start:    0,
 				current:  0,
 				line:     1,
 				tokens:   []token.Token{},
 				HadError: false,
 			},
-			want: "=",
+			want: '=',
 		},
 		{
 			name: "Will return ending if out of bounds",
 			fields: fields{
-				source:   `>`,
+				source:   []byte(`>`),
 				start:    0,
 				current:  0,
 				line:     1,
 				tokens:   []token.Token{},
 				HadError: false,
 			},
-			want: "\000",
+			want: '\000',
+		},
+		{
+			name: "Will peek ahead if current is not on starting position.",
+			fields: fields{
+				source:   []byte(`>=<`),
+				start:    1,
+				current:  1,
+				line:     1,
+				tokens:   []token.Token{},
+				HadError: false,
+			},
+			want: '<',
 		},
 	}
 	for _, tt := range tests {
@@ -655,7 +977,7 @@ func TestScanner_peekNext(t *testing.T) {
 
 func TestScanner_isDigit(t *testing.T) {
 	type fields struct {
-		source   string
+		source   []byte
 		start    int
 		current  int
 		line     int
@@ -663,7 +985,7 @@ func TestScanner_isDigit(t *testing.T) {
 		HadError bool
 	}
 	type args struct {
-		c string
+		c rune
 	}
 	tests := []struct {
 		name   string
@@ -674,27 +996,27 @@ func TestScanner_isDigit(t *testing.T) {
 		{
 			name: "Will be true if number encountered",
 			fields: fields{
-				source:   `1`,
+				source:   []byte(`1`),
 				start:    0,
 				current:  0,
 				line:     1,
 				tokens:   []token.Token{},
 				HadError: false,
 			},
-			args: args{"1"},
+			args: args{'1'},
 			want: true,
 		},
 		{
 			name: "Will be false if non-number encountered",
 			fields: fields{
-				source:   `a`,
+				source:   []byte(`a`),
 				start:    0,
 				current:  0,
 				line:     1,
 				tokens:   []token.Token{},
 				HadError: false,
 			},
-			args: args{"a"},
+			args: args{'a'},
 			want: false,
 		},
 	}
@@ -717,7 +1039,7 @@ func TestScanner_isDigit(t *testing.T) {
 
 func TestScanner_number(t *testing.T) {
 	type fields struct {
-		source   string
+		source   []byte
 		start    int
 		current  int
 		line     int
@@ -733,7 +1055,7 @@ func TestScanner_number(t *testing.T) {
 		{
 			name: "Will handle conversion of decimal string to float64",
 			fields: fields{
-				source:   "1.02",
+				source:   []byte("1.02"),
 				start:    0,
 				current:  0,
 				line:     1,
@@ -741,7 +1063,7 @@ func TestScanner_number(t *testing.T) {
 				HadError: false,
 			},
 			want: &Scanner{
-				source:  "1.02",
+				source:  []byte("1.02"),
 				start:   0,
 				current: 4,
 				line:    1,
@@ -749,12 +1071,12 @@ func TestScanner_number(t *testing.T) {
 					{
 						Type:    token.NUMBER,
 						Lexeme:  "1.02",
-						Literal: 1.02,
+						Literal: []rune("1.02"),
 						Line:    1,
 					},
 					{
 						Type:    token.EOF,
-						Lexeme:  "",
+						Lexeme:  "\000",
 						Literal: nil,
 						Line:    1,
 					},
@@ -765,7 +1087,7 @@ func TestScanner_number(t *testing.T) {
 		{
 			name: "Will handle number string conversion to float64",
 			fields: fields{
-				source:   "102",
+				source:   []byte("102"),
 				start:    0,
 				current:  0,
 				line:     1,
@@ -773,7 +1095,7 @@ func TestScanner_number(t *testing.T) {
 				HadError: false,
 			},
 			want: &Scanner{
-				source:  "102",
+				source:  []byte("102"),
 				start:   0,
 				current: 3,
 				line:    1,
@@ -781,12 +1103,12 @@ func TestScanner_number(t *testing.T) {
 					{
 						Type:    token.NUMBER,
 						Lexeme:  "102",
-						Literal: float64(102),
+						Literal: []rune("102"),
 						Line:    1,
 					},
 					{
 						Type:    token.EOF,
-						Lexeme:  "",
+						Lexeme:  "\000",
 						Literal: nil,
 						Line:    1,
 					},
